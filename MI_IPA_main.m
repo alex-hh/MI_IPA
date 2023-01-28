@@ -6,7 +6,7 @@ addpath('Hungarian_algorithm')
 
 %set parameters
 replicate=1;
-Nincrement =1600;
+Nincrement =600;
 LengthA = 64; %length of first protein (here the HK)
 
 %read data files
@@ -16,18 +16,18 @@ load SpeciesNumbering_Standard_HKRR_dataset; %read in SpeciesNumbering_extr
 %read sequences, adding species number in L+1 and sequence number in L+2
 %L is the full length of concatenated sequences, without supplementary indicators such as species and initial index
 [encoded_focus_alignment, encoded_focus_alignment_headers, L] = readAlignment_and_NumberSpecies(msa_fasta_filename,SpeciesNumbering_extr);
-disp(L)
+disp(["Concatenated sequence length", L])
 %suppress species with one pair
 table_count_species =count_species(encoded_focus_alignment);
 [encoded_focus_alignment, encoded_focus_alignment_headers] = SuppressSpeciesWithOnePair(encoded_focus_alignment, encoded_focus_alignment_headers, table_count_species);
 N = size(encoded_focus_alignment,1); %number of sequences
-disp(N)
+disp(["Number of sequences", N])
 %tabulate species and sequences within species
 table_count_species =count_species(encoded_focus_alignment);
 
 %number of rounds (last one -> all sequences are in the training set)
 Nrounds=ceil(N./Nincrement+1); 
-disp(Nrounds)
+disp(["Number of rounds to perform", Nrounds])
 
 %start from random within-species pairings: scramble the pairings for this.
 encoded_training_alignment = ScrambleSeqs(encoded_focus_alignment, LengthA, table_count_species);
@@ -54,7 +54,7 @@ Output=zeros(Nrounds,6);
 
 for rounds=1:Nrounds %iterate the process until all sequences are in the training set
 
-    disp(rounds)
+    disp(["Round", rounds])
     
     if rounds>1 
         
@@ -70,8 +70,11 @@ for rounds=1:Nrounds %iterate the process until all sequences are in the trainin
         end
         
         %save to Output the number of TP or FP in the training set
-        Output(rounds,5)=size(Results(Results(1:NSeqs_new,2)==Results(1:NSeqs_new,3)),1);
-        Output(rounds,6)=size(Results(Results(1:NSeqs_new,2)~=Results(1:NSeqs_new,3)),1);
+        tps = size(Results(Results(1:NSeqs_new,2)==Results(1:NSeqs_new,3)),1);
+        fps = size(Results(Results(1:NSeqs_new,2)~=Results(1:NSeqs_new,3)),1);
+        disp(["TPs", tps, "FPs", fps])
+        Output(rounds,5)=tps;
+        Output(rounds,6)=fps;
 
         %construct new training set
         newseqs=zeros(NSeqs_new,L);
@@ -82,20 +85,26 @@ for rounds=1:Nrounds %iterate the process until all sequences are in the trainin
         encoded_training_alignment = newseqs; 
         
     end
+
+    % things that happen every round
     
     %construct model from training set
     [PMIs, Meff] = Compute_PMIs(encoded_training_alignment,0.15,0.15);
  
     %compute pairings and gap scores for all pairs
-    Results =Predict_pairs(encoded_focus_alignment, -PMIs, LengthA, table_count_species);  
+    Results =Predict_pairs(encoded_focus_alignment, -PMIs, LengthA, table_count_species);
+    tps = size(Results(Results(:,2)==Results(:,3)),1);
+    fps = size(Results(Results(:,2)~=Results(:,3)),1);
     
     %save the results
     Output(rounds,1)=NSeqs_new;
     Output(rounds,2)=Meff;
-    Output(rounds,3)=size(Results(Results(:,2)==Results(:,3)),1);
-    Output(rounds,4)=size(Results(Results(:,2)~=Results(:,3)),1);
-    
+    Output(rounds,3)=tps;
+    Output(rounds,4)=fps;
+
 end
+
+disp(["TPs", tps, "FPs", fps])
 
 
 %%
