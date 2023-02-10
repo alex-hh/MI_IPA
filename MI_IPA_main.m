@@ -1,16 +1,24 @@
+% https://stackoverflow.com/questions/8981168/running-a-matlab-program-with-arguments
+% for now we run exclusively on HK_RR because this is the only dataset supported by the code
+% (due to the pre-processed SpeciesNumbering_Standard_HKRR_dataset file loaded below).
+% https://stackoverflow.com/questions/3335505/how-can-i-pass-command-line-arguments-to-a-standalone-matlab-executable-running
+% https://www.mathworks.com/help/compiler/create-and-install-a-standalone-application-from-matlab-code.html
+function []=MI_IPA_main(Nincrement, msa_fasta_filename)
+
 %This is the main code to run the MI-IPA on the standard HK-RR dataset.
-clear all
+% clear all
 close all hidden
 set(0,'RecursionLimit',5000)
 addpath('Hungarian_algorithm')
 
 %set parameters
 replicate=1;
-Nincrement =600;
+% Nincrement = 6;
 LengthA = 64; %length of first protein (here the HK)
 
 %read data files
-msa_fasta_filename = 'Standard_HKRR_dataset.fasta'; %sequence data file
+% msa_fasta_filename = 'Standard_HKRR_dataset.fasta'; %sequence data file
+% msa_fasta_filename = 'sub_msa_256.fasta'
 load SpeciesNumbering_Standard_HKRR_dataset; %read in SpeciesNumbering_extr
 
 %read sequences, adding species number in L+1 and sequence number in L+2
@@ -21,7 +29,7 @@ disp(["Concatenated sequence length", L])
 table_count_species =count_species(encoded_focus_alignment);
 [encoded_focus_alignment, encoded_focus_alignment_headers] = SuppressSpeciesWithOnePair(encoded_focus_alignment, encoded_focus_alignment_headers, table_count_species);
 N = size(encoded_focus_alignment,1); %number of sequences
-disp(["Number of sequences", N])
+disp(["Number of sequences with > 1 pair (this may include dummy end and ref start)", N])
 %tabulate species and sequences within species
 table_count_species =count_species(encoded_focus_alignment);
 
@@ -115,3 +123,7 @@ dlmwrite(filename,Output,'delimiter','\t')
 %save the final pairs made and their scores
 filename=strcat('Res/Resf_Ninc',num2str(Nincrement),'_rep',num2str(replicate),'.txt');
 dlmwrite(filename,Results,'delimiter','\t')
+
+exit
+
+end
