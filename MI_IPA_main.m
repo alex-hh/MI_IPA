@@ -3,7 +3,9 @@
 % (due to the pre-processed SpeciesNumbering_Standard_HKRR_dataset file loaded below).
 % https://stackoverflow.com/questions/3335505/how-can-i-pass-command-line-arguments-to-a-standalone-matlab-executable-running
 % https://www.mathworks.com/help/compiler/create-and-install-a-standalone-application-from-matlab-code.html
-function []=MI_IPA_main(Nincrement, msa_fasta_filename)
+% https://www.mathworks.com/help/matlab/ref/inputparser.html
+% matlab -nodisplay -r "MI_IPA_main(6, 'sub_msa_256.fasta')"
+function []=MI_IPA_main(Nincrement, msa_fasta_filename, output_directory)
 
 %This is the main code to run the MI-IPA on the standard HK-RR dataset.
 % clear all
@@ -40,7 +42,7 @@ disp(["Number of rounds to perform", Nrounds])
 %start from random within-species pairings: scramble the pairings for this.
 encoded_training_alignment = ScrambleSeqs(encoded_focus_alignment, LengthA, table_count_species);
 %save the species and initial indices of the sequences in the scrambled alignment we start from
-filename=strcat('Res/IniScrambling_Ninc',num2str(Nincrement),'_rep',num2str(replicate),'.txt');
+filename=strcat(output_directory, '/IniScrambling_Ninc',num2str(Nincrement),'_rep',num2str(replicate),'.txt');
 dlmwrite(filename,encoded_training_alignment(:,L+1:L+4),'delimiter','\t')
 %in the training set, discard extra indices (species index, initial sequence index)
 encoded_training_alignment(:,L+1:L+4)=[];
@@ -101,6 +103,7 @@ for rounds=1:Nrounds %iterate the process until all sequences are in the trainin
  
     %compute pairings and gap scores for all pairs
     Results =Predict_pairs(encoded_focus_alignment, -PMIs, LengthA, table_count_species);
+    % to compute true positives we simply compare the pair index
     tps = size(Results(Results(:,2)==Results(:,3)),1);
     fps = size(Results(Results(:,2)~=Results(:,3)),1);
     
@@ -117,11 +120,11 @@ disp(["TPs", tps, "FPs", fps])
 
 %%
 %save Output matrix
-filename=strcat('Res/TP_data_Ninc',num2str(Nincrement),'_rep',num2str(replicate),'.txt');
+filename=strcat(output_directory, '/TP_data_Ninc',num2str(Nincrement),'_rep',num2str(replicate),'.txt');
 dlmwrite(filename,Output,'delimiter','\t')
 
 %save the final pairs made and their scores
-filename=strcat('Res/Resf_Ninc',num2str(Nincrement),'_rep',num2str(replicate),'.txt');
+filename=strcat(output_directory, '/Resf_Ninc',num2str(Nincrement),'_rep',num2str(replicate),'.txt');
 dlmwrite(filename,Results,'delimiter','\t')
 
 exit
