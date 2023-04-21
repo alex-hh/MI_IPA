@@ -5,7 +5,7 @@
 % https://www.mathworks.com/help/compiler/create-and-install-a-standalone-application-from-matlab-code.html
 % https://www.mathworks.com/help/matlab/ref/inputparser.html
 % matlab -nodisplay -r "MI_IPA_main(6, 'sub_msa_256.fasta')"
-function []=MI_IPA_main(Nincrement, msa_fasta_filename, output_directory)
+function []=MI_IPA_main(Nincrement, LengthA, msa_fasta_filename, output_directory)
 
 %This is the main code to run the MI-IPA on the standard HK-RR dataset.
 % clear all
@@ -16,16 +16,16 @@ addpath('Hungarian_algorithm')
 %set parameters
 replicate=1;
 % Nincrement = 6;
-LengthA = 64; %length of first protein (here the HK)
+% LengthA = 64; %length of first protein (here the HK)
 
 %read data files
 % msa_fasta_filename = 'Standard_HKRR_dataset.fasta'; %sequence data file
 % msa_fasta_filename = 'sub_msa_256.fasta'
-load SpeciesNumbering_Standard_HKRR_dataset; %read in SpeciesNumbering_extr
+% load SpeciesNumbering_Standard_HKRR_dataset; %read in SpeciesNumbering_extr
 
 %read sequences, adding species number in L+1 and sequence number in L+2
 %L is the full length of concatenated sequences, without supplementary indicators such as species and initial index
-[encoded_focus_alignment, encoded_focus_alignment_headers, L] = readAlignment_and_NumberSpecies(msa_fasta_filename,SpeciesNumbering_extr);
+[encoded_focus_alignment, encoded_focus_alignment_headers, L] = readAlignment_and_NumberSpecies(msa_fasta_filename);
 disp(["Concatenated sequence length", L])
 %suppress species with one pair
 table_count_species =count_species(encoded_focus_alignment);
@@ -62,6 +62,7 @@ Output=zeros(Nrounds,6);
 
 %%
 
+% Q: why is there an 'extra' round at the end?
 for rounds=1:Nrounds %iterate the process until all sequences are in the training set
 
     disp(["Round", rounds])
@@ -82,7 +83,8 @@ for rounds=1:Nrounds %iterate the process until all sequences are in the trainin
         %save to Output the number of TP or FP in the training set
         tps = size(Results(Results(1:NSeqs_new,2)==Results(1:NSeqs_new,3)),1);
         fps = size(Results(Results(1:NSeqs_new,2)~=Results(1:NSeqs_new,3)),1);
-        disp(["TPs", tps, "FPs", fps])
+        % Question: why is this going wrong...
+        disp(["train TPs", tps, "train FPs", fps])
         Output(rounds,5)=tps;
         Output(rounds,6)=fps;
 
@@ -106,6 +108,7 @@ for rounds=1:Nrounds %iterate the process until all sequences are in the trainin
     % to compute true positives we simply compare the pair index
     tps = size(Results(Results(:,2)==Results(:,3)),1);
     fps = size(Results(Results(:,2)~=Results(:,3)),1);
+    disp(["full TPs", tps, "full FPs", fps])
     
     %save the results
     Output(rounds,1)=NSeqs_new;
