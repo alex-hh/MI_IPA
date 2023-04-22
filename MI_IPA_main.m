@@ -5,7 +5,7 @@
 % https://www.mathworks.com/help/compiler/create-and-install-a-standalone-application-from-matlab-code.html
 % https://www.mathworks.com/help/matlab/ref/inputparser.html
 % matlab -nodisplay -r "MI_IPA_main(6, 'sub_msa_256.fasta')"
-function []=MI_IPA_main(Nincrement, LengthA, msa_fasta_filename, output_directory)
+function []=MI_IPA_main(Nincrement, LengthA, replicate, msa_fasta_filename, output_directory)
 
 %This is the main code to run the MI-IPA on the standard HK-RR dataset.
 % clear all
@@ -14,7 +14,8 @@ set(0,'RecursionLimit',5000)
 addpath('Hungarian_algorithm')
 
 %set parameters
-replicate=1;
+% replicate=1;
+rng(replicate)
 % Nincrement = 6;
 % LengthA = 64; %length of first protein (here the HK)
 
