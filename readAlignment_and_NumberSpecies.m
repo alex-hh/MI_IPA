@@ -1,7 +1,9 @@
-function [encoded_focus_alignment, encoded_focus_alignment_headers, alignment_width] = readAlignment_and_NumberSpecies(msa_fasta_filename,SpeciesNumbering)
+function [encoded_focus_alignment, encoded_focus_alignment_headers, alignment_width] = readAlignment_and_NumberSpecies(msa_fasta_filename)
 
 %THIS ASSUMES THAT THE FIRST SEQUENCE IS A REFERENCE SEQUENCE
-%and that the last one is a dummy
+%AND THAT THE LAST ONE IS DUMMY
+%WE ALSO ASSUME THAT MSA CONTAINS LABELS OF FORMAT <LabelA>_<LabelB>_<PairId>_<SpeciesNumber>
+%ALTHOUGH ONLY THE PART AFTER THE FINAL UNDERSCORE IS IMPORTANT
 
 % read in alignment. 
 disp(msa_fasta_filename)
@@ -27,14 +29,22 @@ for index=1:alignment_height %loop over sequences in the alignment
     
     if index>1 && index<alignment_height %ref sequence doesn't have the usual type of header; last may be from different species in this extracted file...
         %get species name from the sequence header
-        uniprot_range_line = full_alignment(index).Header;
-        Sepposition = strfind(uniprot_range_line,'|');
-        species_id = uniprot_range_line(Sepposition(1)+1:Sepposition(2)-1);  
-        %use SpeciesNumberingTable to convert this name to a number
-        encoded_focus_alignment(index,alignment_width+1) = SpeciesNumbering{strcmp(SpeciesNumbering(:,2),species_id),1};
+        label = full_alignment(index).Header;
+        % uniprot_range_line = full_alignment(index).Header;
+        % Sepposition = strfind(uniprot_range_line,'|');
+        % species_id = uniprot_range_line(Sepposition(1)+1:Sepposition(2)-1);
+        % species_numeric = SpeciesNumbering{strcmp(SpeciesNumbering(:,2),species_id),1};
+        % Split the string on underscores;
+        parts = strsplit(label, '_');
+        assert(numel(parts) == 4, 'Error: parts does not have exactly 4 elements');
+        % Extract the last element and convert it to a numeric value;
+        species_numeric = str2double(parts{end});
+        %use SpeciesNumberingTable to convert this name to a number and append into the array;
+        encoded_focus_alignment(index,alignment_width+1) = species_numeric;
     end
     
     if index<alignment_height
+        % add pair index to alignment
         encoded_focus_alignment(index,alignment_width+2) = index;
     else
         encoded_focus_alignment(index,alignment_width+1) = NaN;
